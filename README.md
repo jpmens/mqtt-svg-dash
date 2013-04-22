@@ -1,6 +1,8 @@
+# mqtt-svg-dash
 
+Subscribe to MQTT, extract JSON from a message and make lights blink on an SVG page.
 
-![](jmbp-561.png)
+![](jmbp-561.jpg)
 
 ## Pre-requisites
 
