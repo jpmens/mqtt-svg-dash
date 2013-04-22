@@ -1,0 +1,83 @@
+<html>
+  <script>
+	function svgMod(component, color, level, text) { 
+
+	var svg = document.getElementById("svg_image_id")
+      		.getSVGDocument();
+
+	// Put up the text of the message; this should probably be removed
+
+	var msg = svg.getElementById('msg');
+	msg.textContent = component + ': ' + text;
+	msg.style.setProperty("fill", color, "");
+
+	try {
+		var shape = svg.getElementById(component);
+		shape.style.setProperty("fill", color, "");
+
+		var type = shape.getAttribute('type');
+
+		if (type && type == 'num') {
+			// Print the numeric 'level'
+			shape.textContent = level;
+			shape.style.setProperty("fill", color, "");
+		}
+
+		if (type && type == 'slider') {
+			var width = level;
+			var maxw = shape.getAttribute('maxw');
+
+			if (maxw) {
+				width = level > maxw ? maxw : level;
+			}
+			shape.setAttribute("width", width);
+			shape.style.setProperty("fill", color, "");
+		}
+
+	} catch (err) {
+		console.log("component [" + component + "] not in SVG; skipping");
+	}
+
+    } 
+  </script>
+<script type="text/javascript" src="lib/socket.io.min.js"></script>
+<script type="text/javascript" src="lib/jquery-1.4.2.js"></script>
+<script type="text/javascript">
+  var socket = io.connect('http://localhost:5000');
+    socket.on('connect', function () {
+      socket.on('mqtt', function (msg) {
+
+	var arr = msg.topic.split('/');
+	var topic = arr[0];
+	var component = arr[1];
+
+        console.log(component + ',' + msg.topic+' '+msg.payload);
+
+	try {
+		var p = JSON.parse(msg.payload);
+		try {
+			if (p.hasOwnProperty('status')) {
+				var color = 'green';
+
+				switch (p.status) {
+					case 0: color = 'green'; break;
+					case 1: color = 'yellow'; break;
+					case 2: color = 'red'; break;
+					default: color = 'blue'; break;
+				}
+
+				svgMod(component, color, p.level, p.msg);
+			}
+		} catch (err) {};
+					
+	} catch (err) {
+	}
+
+     });
+     socket.emit('subscribe',{topic:'svgdash/#'});
+    });
+</script>
+<body>
+	<embed src="corp.svg" type="image/svg+xml" id="svg_image_id" />
+</body>
+</html>
